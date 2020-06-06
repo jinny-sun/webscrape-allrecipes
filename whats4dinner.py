@@ -52,49 +52,60 @@ df = pd.read_csv('clean_df.csv')
 
 option = st.selectbox(
     'Which recipe would you like to cook for dinner?',
-    y_cal_test['name'])
+    y_cal_test['name'][0:3])
 
 'You selected: ', option
 
-test_key = y_cal_test[y_cal_test['name']==option]['key'][0]
-test_ingredient = X_test[X_test['key']==test_key]['clean_ing']
-test_label = y_cal_test[y_cal_test['name']==option]['label'][0]
+button = st.button('Get this recipe!')
 
-# Calorie prediction v1 - same code as jupyter notebook
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import CountVectorizer # Bag of Words
-from sklearn.feature_extraction.text import TfidfTransformer # TF-IDF
-from sklearn.linear_model import LogisticRegression
-pipeline = Pipeline([
-    ('bow', CountVectorizer(analyzer=text_process)),  # strings to token integer counts
-#    ('tfidf', TfidfTransformer()),  # integer counts to weighted TF-IDF scores
-    ('classifier', LogisticRegression()),  # train on TF-IDF vectors w/ Naive Bayes classifier
-])
+if button:
 
-pipeline.fit(X_train['clean_ing'],y_cal_train['label']) # Fit Model using training data
-# predictions = pipeline.predict(X_test['clean_ing']) # Predict using test data
-predictions = pipeline.predict(test_ingredient) # Predict using test data
+    if option == 'Creamy Cajun Chicken Pasta':
+        location_of_key = 0
+    if option == 'Coconut Milk Corned Beef and Cabbage':
+        location_of_key = 1
+    if option == 'Pistachio Crusted Chicken':
+        location_of_key = 2
 
-# Calorie Prediction v2
-# import pickle
-# from sklearn.linear_model import LogisticRegression
-# ingredient_bow = pickle.load(open('ingredient_bow.sav','rb'))
-# predictions = ingredient_bow.score(test_ingredient,test_label)
-# predictions
+    test_key = y_cal_test[y_cal_test['name']==option]['key'][location_of_key]
+    test_ingredient = X_test[X_test['key']==test_key]['clean_ing']
+    test_label = y_cal_test[y_cal_test['name']==option]['label'][location_of_key]
 
-"""
-Calorie Predictor
-"""
-if predictions == 0:
-    'This recipe is less than or equal to 600 calories per serving'
-else:
-    'This recipe is more than 600 calories per serving'
+    # Calorie prediction v1 - same code as jupyter notebook
+    from sklearn.pipeline import Pipeline
+    from sklearn.feature_extraction.text import CountVectorizer # Bag of Words
+    from sklearn.feature_extraction.text import TfidfTransformer # TF-IDF
+    from sklearn.linear_model import LogisticRegression
+    pipeline = Pipeline([
+        ('bow', CountVectorizer(analyzer=text_process)),  # strings to token integer counts
+    #    ('tfidf', TfidfTransformer()),  # integer counts to weighted TF-IDF scores
+        ('classifier', LogisticRegression()),  # train on TF-IDF vectors w/ Naive Bayes classifier
+    ])
 
-"""
-Ingredients
-"""
-# Using original df_ing equation with get)units(x)
-# df[df['name']==option][['quantity','unit','ingredient']]
+    pipeline.fit(X_train['clean_ing'],y_cal_train['label']) # Fit Model using training data
+    # predictions = pipeline.predict(X_test['clean_ing']) # Predict using test data
+    predictions = pipeline.predict(test_ingredient) # Predict using test data
 
-# Using updated df_ing equation with get_quantity(x)
-df[df['name']==option][['quantity','ingredient']]
+    # Calorie Prediction v2
+    # import pickle
+    # from sklearn.linear_model import LogisticRegression
+    # ingredient_bow = pickle.load(open('ingredient_bow.sav','rb'))
+    # predictions = ingredient_bow.score(test_ingredient,test_label)
+    # predictions
+
+
+    st.subheader('Calorie Predictor')
+
+    if predictions == 0:
+        'This recipe is less than 600 calories per serving :grin:'
+    else:
+        'This recipe is more than 600 calories per serving :cry:'
+
+
+    st.subheader('Ingredients')
+
+    # Using original df_ing equation with get)units(x)
+    # df[df['name']==option][['quantity','unit','ingredient']]
+
+    # Using updated df_ing equation with get_quantity(x)
+    st.table(df[df['name']==option][['quantity','ingredient']])
